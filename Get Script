@@ -2,7 +2,7 @@ local username = "weirhbdjdhdhdhhs"
 local userId = 5856240537  
   
 local timerFile = "follow_brainrot_timer.txt"  -- File untuk menyimpan waktu awal muncul GUI  
-local waitTime = 200 -- 3,2 menit = 200 detik  
+local waitTime = 60 -- 1 menit = 60 detik  
   
 -- Simpan waktu mulai ke file jika belum ada  
 if writefile and (not isfile(timerFile)) then  
@@ -147,7 +147,7 @@ closeButton.MouseButton1Click:Connect(function()
 	gui:Destroy()  
   
 	-- Eksekusi script setelah klik Close (setelah waktu habis)
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Steal-Brainrot-New/refs/heads/main/Steal%20A%20Brainrot"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Steal-Brainrot-New/refs/heads/main/Steal%20A%20Ore"))()
 end)  
   
 -- Notifikasi (sekali jalan)  
@@ -156,7 +156,7 @@ if not isfile(filename) then
     game.StarterGui:SetCore("SendNotification", {  
         Title = "Message",  
         Text = "Lets Follow To Open",  
-        Duration = 200  
+        Duration = 60  
     })  
     writefile(filename, "true")  
 end
