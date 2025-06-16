@@ -2,7 +2,7 @@ local username = "weirhbdjdhdhdhhs"
 local userId = 5856240537  
   
 local timerFile = "follow_brainrot_timer.txt"  -- File untuk menyimpan waktu awal muncul GUI  
-local waitTime = 60 -- 1 menit = 60 detik  
+local waitTime = 30 -- 30 detik  
   
 -- Simpan waktu mulai ke file jika belum ada  
 if writefile and (not isfile(timerFile)) then  
@@ -49,7 +49,23 @@ frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0  
 frame.Parent = gui  
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 16)  
-  
+
+-- Tombol Close
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -28, 0, 4)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeButton.Text = "X"
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 14
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = frame
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
+
+closeButton.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+
 -- Avatar  
 local avatar = Instance.new("ImageLabel")  
 avatar.Size = UDim2.new(0, 60, 0, 60)  
@@ -147,7 +163,7 @@ closeButton.MouseButton1Click:Connect(function()
 	gui:Destroy()  
   
 	-- Eksekusi script setelah klik Close (setelah waktu habis)
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Steal-Brainrot-New/refs/heads/main/Steal%20A%20Ore"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Steal-Brainrot-New/refs/heads/main/Steal%20A%20Brainrot"))()
 end)  
   
 -- Notifikasi (sekali jalan)  
@@ -156,7 +172,7 @@ if not isfile(filename) then
     game.StarterGui:SetCore("SendNotification", {  
         Title = "Message",  
         Text = "Lets Follow To Open",  
-        Duration = 60  
+        Duration = 30 
     })  
     writefile(filename, "true")  
 end
