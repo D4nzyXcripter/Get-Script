@@ -428,11 +428,20 @@ elseif authData.type == "limit" then
 end
 
 local success1, err1 = pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"))()
+    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
+    local content = game:HttpGet(url, true) -- tambah true untuk bypass cache
+    if not content or content == "" then
+        error("HttpGet return kosong / gagal fetch")
+    end
+    local fn, loadErr = loadstring(content)
+    if not fn then
+        error("loadstring gagal: " .. tostring(loadErr))
+    end
+    fn()
 end)
 if not success1 then
     warn("⚠️ Script 1 gagal: " .. tostring(err1))
-    showNotif("⚠️ Error", "Script 1 gagal diload.", 5)
+    showNotif("⚠️ Error", "Script 1 gagal: " .. tostring(err1):sub(1, 50), 8)
 end
 
 local success2, err2 = pcall(function()
