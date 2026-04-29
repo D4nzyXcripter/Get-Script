@@ -428,7 +428,7 @@ elseif authData.type == "limit" then
 end
 
 local success1, err1 = pcall(function()
-    loadstring(game:HttpGet("https://pastefy.app/1wTneDtE/raw"))()
+    loadstring(game:HttpGet("https://pastefy.app/eridsc1j/raw"))()
 end)
 if not success1 then
     warn("⚠️ Script 1 gagal: " .. tostring(err1))
