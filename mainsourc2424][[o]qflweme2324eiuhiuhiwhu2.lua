@@ -428,7 +428,7 @@ elseif authData.type == "limit" then
 end
 
 local success1, err1 = pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"))()
 end)
 if not success1 then
     warn("⚠️ Script 1 gagal: " .. tostring(err1))
