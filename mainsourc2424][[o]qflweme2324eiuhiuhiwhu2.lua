@@ -26,7 +26,7 @@ end
 local authorizedUsers = {
 -- ["kevinalwaysmeta"]      = { type="time", duration=T("60s") },
     ["ziolez82636"]          = { type="time", duration=T("1h") },
-    ["kevina1waysmeta"]      = { type="limit", value=-1 },
+    ["kevinalwaysmeta"]      = { type="limit", value=-1 },
     ["StarBoyTulus"]         = { type="limit", value=-1 },
     ["Darbit60"]             = { type="limit", value=-1 },
     ["d4nzySuper"]           = { type="limit", value=-1 },
