@@ -57,6 +57,7 @@ local authorizedUsers = {
     ["kskaks365"]            = { type="limit", value=-1 },
     ["tayei017"]             = { type="limit", value=-1 },
     ["Lynore82"]             = { type="limit", value=-1 },
+    ["naufal124006"]             = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 5
