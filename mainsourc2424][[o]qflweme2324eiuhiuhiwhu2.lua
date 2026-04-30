@@ -24,7 +24,7 @@ end
 -- time mode  : { type="time", expire=T("1d") } -- durasi dari sekarang
 -- ================================================
 local authorizedUsers = {
--- ["kevinalwaysmeta"]      = { type="time", duration=T("60s") },
+--  ["kevinalwaysmeta"]       = { type="time", duration=T("60s") },
     ["ziolez82636"]          = { type="time", duration=T("1h") },
     ["kevinalwaysmeta"]      = { type="limit", value=-1 },
     ["StarBoyTulus"]         = { type="limit", value=-1 },
@@ -59,6 +59,7 @@ local authorizedUsers = {
     ["Lynore82"]             = { type="limit", value=-1 },
     ["naufal124006"]         = { type="limit", value=-1 },
     ["666_VIBESDEVIL"]       = { type="limit", value=-1 },
+    ["syaxc3"]               = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 5
