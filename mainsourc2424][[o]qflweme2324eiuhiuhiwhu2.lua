@@ -51,13 +51,14 @@ local authorizedUsers = {
     ["egozuper15"]           = { type="limit", value=-1 },
     ["boralobobby1545xd371"] = { type="limit", value=-1 },
     ["d4nzy_nzy"]            = { type="limit", value=-1 },
-    ["mdh124aa"]             = { type="limit", value=-1 },
+    ["erlan125717"]          = { type="limit", value=-1 },
     ["odol_62726"]           = { type="limit", value=-1 },
     ["Berkas13alvi"]         = { type="limit", value=-1 },
     ["kskaks365"]            = { type="limit", value=-1 },
     ["tayei017"]             = { type="limit", value=-1 },
     ["Lynore82"]             = { type="limit", value=-1 },
     ["naufal124006"]         = { type="limit", value=-1 },
+    ["666_VIBESDEVIL"]       = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 5
