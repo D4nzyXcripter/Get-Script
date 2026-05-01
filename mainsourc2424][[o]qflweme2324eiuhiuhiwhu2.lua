@@ -433,7 +433,8 @@ elseif authData.type == "limit" then
 end
 
 local success1, err1 = pcall(function()
-    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
+    -- local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
+    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/aa.lus"
     local content = game:HttpGet(url, true) -- tambah true untuk bypass cache
     if not content or content == "" then
         error("HttpGet return kosong / gagal fetch")
