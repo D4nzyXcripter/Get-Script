@@ -62,6 +62,7 @@ local authorizedUsers = {
     ["syaxc3"]               = { type="limit", value=-1 },
     ["kelvin_ganteng706"]    = { type="limit", value=-1 },
     ["fursicfus"]            = { type="limit", value=-1 },
+    ["firzi_773"]            = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 5
@@ -433,8 +434,8 @@ elseif authData.type == "limit" then
 end
 
 local success1, err1 = pcall(function()
-    -- local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
-    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/aa.lus"
+    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
+    -- local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/aa.lus"
     local content = game:HttpGet(url, true) -- tambah true untuk bypass cache
     if not content or content == "" then
         error("HttpGet return kosong / gagal fetch")
