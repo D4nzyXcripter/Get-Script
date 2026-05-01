@@ -25,6 +25,7 @@ end
 -- ================================================
 local authorizedUsers = {
 --  ["kevinalwaysmeta"]       = { type="time", duration=T("60s") },
+    ["fansberatewindah"]     = { type="time", duration=T("1h") },
     ["Belum_makan0940"]      = { type="limit", value=-1 },
     ["kevinalwaysmeta"]      = { type="limit", value=-1 },
     ["StarBoyTulus"]         = { type="limit", value=-1 },
