@@ -61,6 +61,7 @@ local authorizedUsers = {
     ["666_VIBESDEVIL"]       = { type="limit", value=-1 },
     ["syaxc3"]               = { type="limit", value=-1 },
     ["kelvin_ganteng706"]    = { type="limit", value=-1 },
+    ["fursicfus"]            = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 5
