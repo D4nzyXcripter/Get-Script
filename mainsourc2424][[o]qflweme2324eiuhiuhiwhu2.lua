@@ -20,16 +20,16 @@ end
 
 -- ================================================
 --        AUTHORIZED USERS
--- limit mode : { type="limit", value=N }   -- N kali pakai, -1 = unlimited
--- time mode  : { type="time", expire=T("1d") } -- durasi dari sekarang
+-- limit mode : { type="limit", value=N }       -- N kali pakai, -1 = unlimited
+-- time mode  : { type="time", duration=T("1d") } -- durasi dari sekarang
+-- kick mode  : { type="kick", reason="..." }   -- langsung kick + log
 -- ================================================
 local authorizedUsers = {
-    -- BLACKLISTED USERS
-    ["DAFAROR200"]  = { type="kick", reason="Ngaku Owner Script" },
+    -- KICKED USERS
+    ["DAFAROR200"]           = { type="kick", reason="Ngaku Owner Script" },
 
     -- AUTHORIZED USERS
---  ["kevinalwaysmeta"]       = { type="time", duration=T("60s") },
-    ["fansberatewindah"]     = { type="time", duration=T("1h") },
+    ["fansberatewindah"]     = { type="time",  duration=T("1h") },
     ["Belum_makan0940"]      = { type="limit", value=-1 },
     ["kevinalwaysmeta"]      = { type="limit", value=-1 },
     ["StarBoyTulus"]         = { type="limit", value=-1 },
@@ -68,7 +68,6 @@ local authorizedUsers = {
     ["fursicfus"]            = { type="limit", value=-1 },
     ["firzi_773"]            = { type="limit", value=-1 },
     ["ROBI_123690"]          = { type="limit", value=-1 },
---  ["DAFAROR200"]           = { type="limit", value=-1 },
     ["Dontmesswitme2432"]    = { type="limit", value=-1 },
     ["hyydinss"]             = { type="limit", value=-1 },
     ["SharkR1NV355N"]        = { type="limit", value=-1 },
@@ -111,9 +110,6 @@ local function getTimestamp()
     return os.date("!%Y-%m-%dT%H:%M:%SZ")
 end
 
--- ================================================
---        WEBHOOK (MULTI-EXECUTOR SUPPORT)
--- ================================================
 local function httpRequest(data)
     if syn and syn.request then
         return syn.request(data)
@@ -178,6 +174,9 @@ local playerName         = player.Name
 local authKey, authData  = getEntry(playerName)
 local placeId, placeLink = buildPlaceInfo()
 
+-- ================================================
+--  CEK 1: BLACKLIST FILE (permanen)
+-- ================================================
 local blacklistFile = fname("blacklist", playerName)
 if isfile(blacklistFile) then
     local forceFile = fname("force", playerName)
@@ -204,6 +203,9 @@ if isfile(blacklistFile) then
     return
 end
 
+-- ================================================
+--  CEK 2: UNAUTHORIZED (tidak ada di daftar)
+-- ================================================
 if not authKey then
     local forceFile = fname("force", playerName)
     local attempts  = readInt(forceFile, 0) + 1
@@ -258,12 +260,40 @@ if not authKey then
     return
 end
 
-if authData.type == "time" then
-    local now           = os.time()
-    local remainFile    = fname("remain", authKey)
-    local lastExecFile  = fname("lastexec", authKey)
+-- ================================================
+--  CEK 3: KICK LIST
+-- ================================================
+if authData.type == "kick" then
+    local reason = authData.reason or "Tidak diizinkan."
 
-    -- Ambil sisa durasi
+    sendWebhook(WEBHOOK_UNAUTHORIZED, {
+        title       = "🥾  KICKED USER ATTEMPT",
+        description = "User masuk **daftar kick** mencoba execute script!",
+        color       = 15105570,
+        fields      = {
+            { name = "👤  User",       value = "`" .. authKey .. "`", inline = true  },
+            { name = "🔴  Status",     value = "**KICKED**",           inline = true  },
+            { name = "📋  Alasan",     value = reason,                 inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",  inline = false },
+            { name = "🔗  Place Link", value = placeLink,              inline = false },
+        },
+        footer    = { text = "Script Monitor • Kicked" },
+        timestamp = getTimestamp(),
+    })
+    showNotif("🥾 Kicked", reason, 8)
+    warn("🥾 You have been kicked: " .. reason)
+    kickPlayer("🥾 " .. reason)
+    return
+end
+
+-- ================================================
+--  CEK 4: TIME MODE
+-- ================================================
+if authData.type == "time" then
+    local now          = os.time()
+    local remainFile   = fname("remain", authKey)
+    local lastExecFile = fname("lastexec", authKey)
+
     local remaining
     if isfile(remainFile) then
         remaining = tonumber(readfile(remainFile))
@@ -283,11 +313,11 @@ if authData.type == "time" then
             description = "User terdaftar tapi **waktu akses sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",          value = "`" .. authKey .. "`",  inline = true  },
-                { name = "🔴  Status",        value = "**EXPIRED**",           inline = true  },
-                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x", inline = false },
-                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",  inline = false },
-                { name = "🔗  Place Link",    value = placeLink,              inline = false },
+                { name = "👤  User",          value = "`" .. authKey .. "`",     inline = true  },
+                { name = "🔴  Status",        value = "**EXPIRED**",              inline = true  },
+                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x",  inline = false },
+                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",      inline = false },
+                { name = "🔗  Place Link",    value = placeLink,                  inline = false },
             },
             footer    = { text = "Script Monitor • Time Expired" },
             timestamp = getTimestamp(),
@@ -348,17 +378,20 @@ if authData.type == "time" then
         description = "User authorized (time-based) berhasil execute.",
         color       = 3066993,
         fields      = {
-            { name = "👤  User",       value = "`" .. authKey .. "`", inline = true  },
-            { name = "🟢  Status",     value = "**AUTHORIZED**",       inline = true  },
+            { name = "👤  User",       value = "`" .. authKey .. "`",              inline = true  },
+            { name = "🟢  Status",     value = "**AUTHORIZED**",                    inline = true  },
             { name = "⏳  Sisa Waktu", value = formatTimeLeft(math.floor(remaining)), inline = false },
-            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",  inline = false },
-            { name = "🔗  Place Link", value = placeLink,              inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",               inline = false },
+            { name = "🔗  Place Link", value = placeLink,                           inline = false },
         },
         footer    = { text = "Script Monitor • Authorized (Time)" },
         timestamp = getTimestamp(),
     })
     showNotif("✅ Script Loaded", "Sisa waktu: " .. formatTimeLeft(math.floor(remaining)), 5)
 
+-- ================================================
+--  CEK 5: LIMIT MODE
+-- ================================================
 elseif authData.type == "limit" then
     local maxUsage     = authData.value
     local usageFile    = fname("usage", authKey)
@@ -375,12 +408,12 @@ elseif authData.type == "limit" then
             description = "User terdaftar tapi **limit sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",          value = "`" .. authKey .. "`",                                      inline = true  },
-                { name = "🔴  Status",        value = "**INACTIVE** *(Limit Habis)*",                             inline = true  },
-                { name = "📊  Usage",         value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x",  inline = false },
-                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x",                                  inline = false },
-                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",                                      inline = false },
-                { name = "🔗  Place Link",    value = placeLink,                                                  inline = false },
+                { name = "👤  User",          value = "`" .. authKey .. "`",                                     inline = true  },
+                { name = "🔴  Status",        value = "**INACTIVE** *(Limit Habis)*",                            inline = true  },
+                { name = "📊  Usage",         value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x", inline = false },
+                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x",                                 inline = false },
+                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",                                     inline = false },
+                { name = "🔗  Place Link",    value = placeLink,                                                 inline = false },
             },
             footer    = { text = "Script Monitor • Limit Reached" },
             timestamp = getTimestamp(),
@@ -430,11 +463,11 @@ elseif authData.type == "limit" then
         description = "User authorized berhasil menjalankan script.",
         color       = 3066993,
         fields      = {
-            { name = "👤  User",       value = "`" .. authKey .. "`",                                    inline = true  },
-            { name = "🟢  Status",     value = "**AUTHORIZED**",                                          inline = true  },
+            { name = "👤  User",       value = "`" .. authKey .. "`",                                     inline = true  },
+            { name = "🟢  Status",     value = "**AUTHORIZED**",                                           inline = true  },
             { name = "📊  Usage",      value = tostring(used) .. "x dipakai | **" .. leftStr .. "** sisa", inline = false },
-            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                                     inline = false },
-            { name = "🔗  Place Link", value = placeLink,                                                 inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                                      inline = false },
+            { name = "🔗  Place Link", value = placeLink,                                                  inline = false },
         },
         footer    = { text = "Script Monitor • Authorized" },
         timestamp = getTimestamp(),
@@ -442,33 +475,12 @@ elseif authData.type == "limit" then
     showNotif("✅ Script Loaded", "LIMIT DIPAKAI " .. used .. "x | " .. leftStr .. " tersisa", 5)
 end
 
-if authData.type == "kick" then
-    local reason = authData.reason or "Tidak diizinkan."
-
-    sendWebhook(WEBHOOK_UNAUTHORIZED, {
-        title       = "🥾  KICKED USER ATTEMPT",
-        description = "User masuk **daftar kick** mencoba execute script!",
-        color       = 15105570,
-        fields      = {
-            { name = "👤  User",      value = "`" .. authKey .. "`", inline = true  },
-            { name = "🔴  Status",    value = "**KICKED**",           inline = true  },
-            { name = "📋  Alasan",    value = reason,                 inline = false },
-            { name = "🎮  Place ID",  value = "`" .. placeId .. "`",  inline = false },
-            { name = "🔗  Place Link",value = placeLink,              inline = false },
-        },
-        footer    = { text = "Script Monitor • Kicked" },
-        timestamp = getTimestamp(),
-    })
-    showNotif("🥾 Kicked", reason, 8)
-    warn("🥾 You have been kicked: " .. reason)
-    kickPlayer("🥾 " .. reason)
-    return
-end
-
+-- ================================================
+--  LOAD SCRIPT UTAMA
+-- ================================================
 local success1, err1 = pcall(function()
-    local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
-    -- local url = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/aa.lus"
-    local content = game:HttpGet(url, true) -- tambah true untuk bypass cache
+    local url     = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
+    local content = game:HttpGet(url, true)
     if not content or content == "" then
         error("HttpGet return kosong / gagal fetch")
     end
