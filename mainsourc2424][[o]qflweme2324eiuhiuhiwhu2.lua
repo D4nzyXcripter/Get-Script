@@ -66,6 +66,7 @@ local authorizedUsers = {
     ["ROBI_123690"]          = { type="limit", value=-1 },
     ["DAFAROR200"]           = { type="limit", value=-1 },
     ["Dontmesswitme2432"]    = { type="limit", value=-1 },
+    ["hyydinss"]             = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 3
