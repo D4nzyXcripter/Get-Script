@@ -26,7 +26,7 @@ end
 -- ================================================
 local authorizedUsers = {
     -- KICKED USERS
-    ["DAFAROR200"]           = { type="kick", reason="Ngaku Owner Script" },
+--  ["DAFAROR200"]           = { type="kick", reason="Ngaku Owner Script" },
 
     -- AUTHORIZED USERS
     ["fansberatewindah"]     = { type="time",  duration=T("1h") },
@@ -71,6 +71,7 @@ local authorizedUsers = {
     ["Dontmesswitme2432"]    = { type="limit", value=-1 },
     ["hyydinss"]             = { type="limit", value=-1 },
     ["SharkR1NV355N"]        = { type="limit", value=-1 },
+    ["DAFAROR200"]           = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 3
