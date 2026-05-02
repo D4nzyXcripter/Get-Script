@@ -44,7 +44,6 @@ local authorizedUsers = {
     ["dapol44"]              = { type="limit", value=-1 },
     ["kaku123794"]           = { type="limit", value=-1 },
     ["nachzuchtlk"]          = { type="limit", value=-1 },
-    ["alip_0404"]            = { type="limit", value=-1 },
     ["HAKIMNOT5"]            = { type="limit", value=-1 },
     ["esavage74"]            = { type="limit", value=-1 },
     ["SINZx444X"]            = { type="limit", value=-1 },
