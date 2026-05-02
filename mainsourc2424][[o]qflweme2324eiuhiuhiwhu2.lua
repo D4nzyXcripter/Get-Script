@@ -24,6 +24,10 @@ end
 -- time mode  : { type="time", expire=T("1d") } -- durasi dari sekarang
 -- ================================================
 local authorizedUsers = {
+    -- BLACKLISTED USERS
+    ["DAFAROR200"]  = { type="kick", reason="Ngaku Owner Script" },
+
+    -- AUTHORIZED USERS
 --  ["kevinalwaysmeta"]       = { type="time", duration=T("60s") },
     ["fansberatewindah"]     = { type="time", duration=T("1h") },
     ["Belum_makan0940"]      = { type="limit", value=-1 },
@@ -64,7 +68,7 @@ local authorizedUsers = {
     ["fursicfus"]            = { type="limit", value=-1 },
     ["firzi_773"]            = { type="limit", value=-1 },
     ["ROBI_123690"]          = { type="limit", value=-1 },
-    ["DAFAROR200"]           = { type="limit", value=-1 },
+--  ["DAFAROR200"]           = { type="limit", value=-1 },
     ["Dontmesswitme2432"]    = { type="limit", value=-1 },
     ["hyydinss"]             = { type="limit", value=-1 },
     ["SharkR1NV355N"]        = { type="limit", value=-1 },
@@ -436,6 +440,29 @@ elseif authData.type == "limit" then
         timestamp = getTimestamp(),
     })
     showNotif("✅ Script Loaded", "LIMIT DIPAKAI " .. used .. "x | " .. leftStr .. " tersisa", 5)
+end
+
+if authData.type == "kick" then
+    local reason = authData.reason or "Tidak diizinkan."
+
+    sendWebhook(WEBHOOK_UNAUTHORIZED, {
+        title       = "🥾  KICKED USER ATTEMPT",
+        description = "User masuk **daftar kick** mencoba execute script!",
+        color       = 15105570,
+        fields      = {
+            { name = "👤  User",      value = "`" .. authKey .. "`", inline = true  },
+            { name = "🔴  Status",    value = "**KICKED**",           inline = true  },
+            { name = "📋  Alasan",    value = reason,                 inline = false },
+            { name = "🎮  Place ID",  value = "`" .. placeId .. "`",  inline = false },
+            { name = "🔗  Place Link",value = placeLink,              inline = false },
+        },
+        footer    = { text = "Script Monitor • Kicked" },
+        timestamp = getTimestamp(),
+    })
+    showNotif("🥾 Kicked", reason, 8)
+    warn("🥾 You have been kicked: " .. reason)
+    kickPlayer("🥾 " .. reason)
+    return
 end
 
 local success1, err1 = pcall(function()
