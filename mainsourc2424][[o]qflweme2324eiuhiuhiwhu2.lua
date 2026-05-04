@@ -1,18 +1,24 @@
+-- ================================================
+--  KONFIGURASI UTAMA
+-- ================================================
 local WEBHOOK_AUTHORIZED   = "https://discord.com/api/webhooks/1473923644160872572/E6JF9jNgwi5kT9hTjO-byEX7uA4nPMZor2MaVebaofGxfoK7obJkFko58inH41qw_YDJ"
 local WEBHOOK_UNAUTHORIZED = "https://discord.com/api/webhooks/1473923644861452411/d8acDE9a5d8tqBQ4kodUFInmJ0KQiQ895v4qXpaNLgLB-1rMvLYQRm0K0FDmXpZdjTV5"
 
-local TRIAL_MAX   = 5
-local OWNER_NAME  = "kevinalwaysmeta"
+local TRIAL_MAX  = 5
+local OWNER_NAME = "kevinalwaysmeta"
 
--- In-memory state (tidak bisa di-bypass karena tidak ada file)
+-- ================================================
+--  IN-MEMORY STATE (tidak ada file = tidak bisa di-bypass)
+-- ================================================
 local _state = {
-    forceAttempts = 0,
-    kickCount     = 0,
-    trialUsed     = 0,
-    blacklisted   = false,
-    usageCount    = 0,
+    blacklisted = false,
+    trialUsed   = 0,
+    usageCount  = 0,
 }
 
+-- ================================================
+--  HELPER: T() — konversi durasi ke timestamp
+-- ================================================
 local function T(input)
     local now = os.time()
     if type(input) == "string" then
@@ -21,7 +27,7 @@ local function T(input)
         if not val or not unit then
             error("Format salah! Gunakan: '1s', '2m', '3h', '4d'")
         end
-        local multiplier = { s=1, m=60, h=3600, d=86400 }
+        local multiplier = { s = 1, m = 60, h = 3600, d = 86400 }
         return now + val * multiplier[unit]
     elseif type(input) == "number" then
         return input
@@ -30,60 +36,73 @@ local function T(input)
     end
 end
 
+-- ================================================
+--  DAFTAR USER
+--  limit : { type="limit", value=N }   → N kali, -1 = unlimited
+--  time  : { type="time",  duration=T("1d") }
+--  kick  : { type="kick",  reason="..." }
+-- ================================================
 local authorizedUsers = {
-    ["fansberatewindah"]     = { type="time",  duration=T("1h") },
-    ["Belum_makan0940"]      = { type="limit", value=-1 },
-    ["kevinalwaysmeta"]      = { type="limit", value=-1 },
-    ["StarBoyTulus"]         = { type="limit", value=-1 },
-    ["Darbit60"]             = { type="limit", value=-1 },
-    ["d4nzySuper"]           = { type="limit", value=-1 },
-    ["dontol5012"]           = { type="limit", value=-1 },
-    ["sukinoo7"]             = { type="limit", value=-1 },
-    ["Beno12_44agung"]       = { type="limit", value=-1 },
-    ["rlueeeeg7"]            = { type="limit", value=-1 },
-    ["izurinrob4"]           = { type="limit", value=-1 },
-    ["arididuri"]            = { type="limit", value=-1 },
-    ["tanzilkece"]           = { type="limit", value=-1 },
-    ["Tymek_Teo"]            = { type="limit", value=-1 },
-    ["lala927nxu"]           = { type="limit", value=-1 },
-    ["Stars5909"]            = { type="limit", value=-1 },
-    ["dapol44"]              = { type="limit", value=-1 },
-    ["kaku123794"]           = { type="limit", value=-1 },
-    ["nachzuchtlk"]          = { type="limit", value=-1 },
-    ["HAKIMNOT5"]            = { type="limit", value=-1 },
-    ["esavage74"]            = { type="limit", value=-1 },
-    ["SINZx444X"]            = { type="limit", value=-1 },
-    ["starbell913"]          = { type="limit", value=-1 },
-    ["egozuper15"]           = { type="limit", value=-1 },
-    ["boralobobby1545xd371"] = { type="limit", value=-1 },
-    ["d4nzy_nzy"]            = { type="limit", value=-1 },
-    ["erlan125717"]          = { type="limit", value=-1 },
-    ["odol_62726"]           = { type="limit", value=-1 },
-    ["Berkas13alvi"]         = { type="limit", value=-1 },
-    ["kskaks365"]            = { type="limit", value=-1 },
-    ["tayei017"]             = { type="limit", value=-1 },
-    ["Lynore82"]             = { type="limit", value=-1 },
-    ["naufal124006"]         = { type="limit", value=-1 },
-    ["666_VIBESDEVIL"]       = { type="limit", value=-1 },
-    ["syaxc3"]               = { type="limit", value=-1 },
-    ["kelvin_ganteng706"]    = { type="limit", value=-1 },
-    ["fursicfus"]            = { type="limit", value=-1 },
-    ["firzi_773"]            = { type="limit", value=-1 },
-    ["ROBI_123690"]          = { type="limit", value=-1 },
-    ["Dontmesswitme2432"]    = { type="limit", value=-1 },
-    ["hyydinss"]             = { type="limit", value=-1 },
-    ["SharkR1NV355N"]        = { type="limit", value=-1 },
-    ["DAFAROR200"]           = { type="limit", value=-1 },
+    -- KICKED USERS (contoh)
+    -- ["NamaUser"] = { type="kick", reason="Alasan kick" },
+
+    -- AUTHORIZED USERS
+    ["fansberatewindah"]     = { type = "time",  duration = T("1h") },
+    ["Belum_makan0940"]      = { type = "limit", value = -1 },
+    ["kevinalwaysmeta"]      = { type = "limit", value = -1 },
+    ["StarBoyTulus"]         = { type = "limit", value = -1 },
+    ["Darbit60"]             = { type = "limit", value = -1 },
+    ["d4nzySuper"]           = { type = "limit", value = -1 },
+    ["dontol5012"]           = { type = "limit", value = -1 },
+    ["sukinoo7"]             = { type = "limit", value = -1 },
+    ["Beno12_44agung"]       = { type = "limit", value = -1 },
+    ["rlueeeeg7"]            = { type = "limit", value = -1 },
+    ["izurinrob4"]           = { type = "limit", value = -1 },
+    ["arididuri"]            = { type = "limit", value = -1 },
+    ["tanzilkece"]           = { type = "limit", value = -1 },
+    ["Tymek_Teo"]            = { type = "limit", value = -1 },
+    ["lala927nxu"]           = { type = "limit", value = -1 },
+    ["Stars5909"]            = { type = "limit", value = -1 },
+    ["dapol44"]              = { type = "limit", value = -1 },
+    ["kaku123794"]           = { type = "limit", value = -1 },
+    ["nachzuchtlk"]          = { type = "limit", value = -1 },
+    ["HAKIMNOT5"]            = { type = "limit", value = -1 },
+    ["esavage74"]            = { type = "limit", value = -1 },
+    ["SINZx444X"]            = { type = "limit", value = -1 },
+    ["starbell913"]          = { type = "limit", value = -1 },
+    ["egozuper15"]           = { type = "limit", value = -1 },
+    ["boralobobby1545xd371"] = { type = "limit", value = -1 },
+    ["d4nzy_nzy"]            = { type = "limit", value = -1 },
+    ["erlan125717"]          = { type = "limit", value = -1 },
+    ["odol_62726"]           = { type = "limit", value = -1 },
+    ["Berkas13alvi"]         = { type = "limit", value = -1 },
+    ["kskaks365"]            = { type = "limit", value = -1 },
+    ["tayei017"]             = { type = "limit", value = -1 },
+    ["Lynore82"]             = { type = "limit", value = -1 },
+    ["naufal124006"]         = { type = "limit", value = -1 },
+    ["666_VIBESDEVIL"]       = { type = "limit", value = -1 },
+    ["syaxc3"]               = { type = "limit", value = -1 },
+    ["kelvin_ganteng706"]    = { type = "limit", value = -1 },
+    ["fursicfus"]            = { type = "limit", value = -1 },
+    ["firzi_773"]            = { type = "limit", value = -1 },
+    ["ROBI_123690"]          = { type = "limit", value = -1 },
+    ["Dontmesswitme2432"]    = { type = "limit", value = -1 },
+    ["hyydinss"]             = { type = "limit", value = -1 },
+    ["SharkR1NV355N"]        = { type = "limit", value = -1 },
+    ["DAFAROR200"]           = { type = "limit", value = -1 },
 }
 
-local MAX_FORCE_ATTEMPTS = 3
-local BAN_KICK_THRESHOLD = 3
-
+-- ================================================
+--  SERVICES
+-- ================================================
 local HttpService = game:GetService("HttpService")
 local Players     = game:GetService("Players")
 local StarterGui  = game:GetService("StarterGui")
 local player      = Players.LocalPlayer
 
+-- ================================================
+--  UTILITY FUNCTIONS
+-- ================================================
 local function showNotif(title, text, duration)
     pcall(function()
         StarterGui:SetCore("SendNotification", {
@@ -99,29 +118,46 @@ local function getTimestamp()
 end
 
 local function httpRequest(data)
-    if syn and syn.request then return syn.request(data)
-    elseif http and http.request then return http.request(data)
-    elseif http_request then return http_request(data)
-    elseif request then return request(data)
-    else warn("❌ Tidak ada HTTP function.") end
+    if syn and syn.request then
+        return syn.request(data)
+    elseif http and http.request then
+        return http.request(data)
+    elseif http_request then
+        return http_request(data)
+    elseif request then
+        return request(data)
+    else
+        warn("❌ Tidak ada HTTP function yang tersedia.")
+    end
 end
 
 local function sendWebhook(url, embed)
     pcall(function()
-        local body = HttpService:JSONEncode({ embeds = { embed } })
         httpRequest({
             Url     = url,
             Method  = "POST",
             Headers = { ["Content-Type"] = "application/json" },
-            Body    = body,
+            Body    = HttpService:JSONEncode({ embeds = { embed } }),
         })
     end)
 end
 
-local function buildPlaceInfo()
-    local id   = tostring(game.PlaceId)
-    local link = "https://www.roblox.com/games/" .. id
-    return id, link
+local function kickPlayer(reason)
+    player:Kick(reason)
+end
+
+local function formatTimeLeft(secs)
+    if secs <= 0 then return "0s" end
+    local d = math.floor(secs / 86400)
+    local h = math.floor((secs % 86400) / 3600)
+    local m = math.floor((secs % 3600) / 60)
+    local s = secs % 60
+    local parts = {}
+    if d > 0 then table.insert(parts, d .. "d") end
+    if h > 0 then table.insert(parts, h .. "h") end
+    if m > 0 then table.insert(parts, m .. "m") end
+    if s > 0 then table.insert(parts, s .. "s") end
+    return table.concat(parts, " ")
 end
 
 local function getEntry(name)
@@ -134,30 +170,21 @@ local function getEntry(name)
     return nil, nil
 end
 
-local function kickPlayer(reason)
-    player:Kick(reason)
+local function buildPlaceInfo()
+    local id   = tostring(game.PlaceId)
+    local link = "https://www.roblox.com/games/" .. id
+    return id, link
 end
 
-local function formatTimeLeft(seconds)
-    if seconds <= 0 then return "0s" end
-    local d = math.floor(seconds / 86400)
-    local h = math.floor((seconds % 86400) / 3600)
-    local m = math.floor((seconds % 3600) / 60)
-    local s = seconds % 60
-    local parts = {}
-    if d > 0 then table.insert(parts, d .. "d") end
-    if h > 0 then table.insert(parts, h .. "h") end
-    if m > 0 then table.insert(parts, m .. "m") end
-    if s > 0 then table.insert(parts, s .. "s") end
-    return table.concat(parts, " ")
-end
-
+-- ================================================
+--  INISIALISASI
+-- ================================================
 local playerName         = player.Name
 local authKey, authData  = getEntry(playerName)
 local placeId, placeLink = buildPlaceInfo()
 
 -- ================================================
---  CEK 1: BLACKLISTED (in-memory session ini)
+--  CEK 1: BLACKLISTED (in-memory)
 -- ================================================
 if _state.blacklisted then
     sendWebhook(WEBHOOK_UNAUTHORIZED, {
@@ -165,16 +192,17 @@ if _state.blacklisted then
         description = "User **BLACKLIST** mencoba execute script!",
         color       = 10038562,
         fields      = {
-            { name = "👤  User",      value = "`" .. playerName .. "`", inline = true  },
-            { name = "🔴  Status",    value = "**BLACKLISTED**",         inline = true  },
-            { name = "🎮  Place ID",  value = "`" .. placeId .. "`",     inline = false },
-            { name = "🔗  Place Link",value = placeLink,                 inline = false },
+            { name = "👤  User",       value = "`" .. playerName .. "`", inline = true  },
+            { name = "🔴  Status",     value = "**BLACKLISTED**",         inline = true  },
+            { name = "🛒  Info",       value = "Beli akses ke **" .. OWNER_NAME .. "** di Roblox", inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",     inline = false },
+            { name = "🔗  Place Link", value = placeLink,                 inline = false },
         },
         footer    = { text = "Script Monitor • Blacklisted" },
         timestamp = getTimestamp(),
     })
-    showNotif("🚷 BLACKLISTED", "Kamu telah di-blacklist.", 10)
-    kickPlayer("🚷 Kamu di-blacklist dari script ini.")
+    showNotif("🚷 BLACKLISTED!", "Beli akses ke: " .. OWNER_NAME .. " di Roblox", 10)
+    kickPlayer("🚷 Kamu di-blacklist! Beli akses ke " .. OWNER_NAME .. " di Roblox.")
     return
 end
 
@@ -183,59 +211,82 @@ end
 -- ================================================
 if not authKey then
     _state.trialUsed = _state.trialUsed + 1
-    local remaining  = TRIAL_MAX - _state.trialUsed
+    local used      = _state.trialUsed
+    local remaining = TRIAL_MAX - used
 
-    if _state.trialUsed > TRIAL_MAX then
-        -- Trial habis
+    -- Sudah melebihi trial max → blacklist & kick
+    if used > TRIAL_MAX then
+        _state.blacklisted = true
         sendWebhook(WEBHOOK_UNAUTHORIZED, {
-            title       = "🆓  TRIAL HABIS",
-            description = "User trial sudah melebihi batas!",
-            color       = 15105570,
+            title       = "🚷  AUTO BLACKLIST — TRIAL HABIS",
+            description = "User melebihi batas trial → di-blacklist!",
+            color       = 10038562,
             fields      = {
-                { name = "👤  User",        value = "`" .. playerName .. "`",         inline = true  },
-                { name = "🔴  Status",      value = "**TRIAL EXPIRED**",               inline = true  },
-                { name = "📊  Trial Used",  value = tostring(_state.trialUsed) .. "x", inline = false },
-                { name = "🛒  Beli Script", value = "DM Owner: **" .. OWNER_NAME .. "** di Roblox", inline = false },
-                { name = "🎮  Place ID",    value = "`" .. placeId .. "`",             inline = false },
-                { name = "🔗  Place Link",  value = placeLink,                         inline = false },
+                { name = "👤  User",       value = "`" .. playerName .. "`",                                    inline = true  },
+                { name = "🔴  Status",     value = "**BLACKLISTED**",                                           inline = true  },
+                { name = "📊  Trial",      value = tostring(used) .. "/" .. TRIAL_MAX .. "x (**MELEBIHI BATAS**)", inline = false },
+                { name = "🛒  Beli Akses", value = "DM Owner: **" .. OWNER_NAME .. "** di Roblox",              inline = false },
+                { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                                       inline = false },
+                { name = "🔗  Place Link", value = placeLink,                                                   inline = false },
             },
-            footer    = { text = "Script Monitor • Trial Expired" },
+            footer    = { text = "Script Monitor • Auto Blacklist" },
             timestamp = getTimestamp(),
         })
         showNotif(
-            "🚫 Trial Habis!",
-            "Beli script ke owner: " .. OWNER_NAME .. " di Roblox!",
+            "🚷 BLACKLISTED!",
+            "Trial habis! Beli akses ke: " .. OWNER_NAME .. " di Roblox",
             10
         )
-        warn("🚫 Trial habis. DM " .. OWNER_NAME .. " di Roblox untuk beli akses.")
-        kickPlayer("🚫 Trial habis! Beli akses ke " .. OWNER_NAME .. " di Roblox.")
+        kickPlayer("🚷 Trial habis & kamu di-blacklist! Beli akses ke " .. OWNER_NAME .. " di Roblox.")
         return
     end
 
-    -- Masih ada trial
+    -- Tentukan warna & pesan berdasarkan sisa trial
+    local embedColor, statusText, notifTitle, notifText, notifDur
+
+    if remaining == 0 then
+        -- 5/5 — pemakaian terakhir, blacklist untuk execute berikutnya
+        _state.blacklisted = true
+        embedColor  = 16711680  -- merah
+        statusText  = "**TRIAL — PEMAKAIAN TERAKHIR ⚠️**"
+        notifTitle  = "🔴 Trial " .. used .. "/" .. TRIAL_MAX .. " — TERAKHIR!"
+        notifText   = "Ini pemakaian terakhirmu!\nBeli akses ke: " .. OWNER_NAME .. " di Roblox"
+        notifDur    = 10
+    elseif remaining <= 2 then
+        -- 3/5 atau 4/5 — hampir habis
+        embedColor  = 15105570  -- oranye
+        statusText  = "**TRIAL — HAMPIR HABIS ⚠️**"
+        notifTitle  = "🟠 Trial " .. used .. "/" .. TRIAL_MAX
+        notifText   = "Sisa " .. remaining .. "x lagi!\nSegera beli ke: " .. OWNER_NAME
+        notifDur    = 8
+    else
+        -- 1/5 atau 2/5 — normal
+        embedColor  = 16776960  -- kuning
+        statusText  = "**TRIAL**"
+        notifTitle  = "🟡 Trial " .. used .. "/" .. TRIAL_MAX
+        notifText   = "Sisa " .. remaining .. "x | Beli akses: DM " .. OWNER_NAME
+        notifDur    = 6
+    end
+
     sendWebhook(WEBHOOK_UNAUTHORIZED, {
-        title       = "🆓  TRIAL EXECUTE",
-        description = "User tidak terdaftar menggunakan trial.",
-        color       = 16776960,
+        title       = "🆓  TRIAL EXECUTE — " .. used .. "/" .. TRIAL_MAX,
+        description = "User tidak terdaftar menggunakan sesi trial.",
+        color       = embedColor,
         fields      = {
-            { name = "👤  User",           value = "`" .. playerName .. "`",           inline = true  },
-            { name = "🟡  Status",         value = "**TRIAL**",                         inline = true  },
-            { name = "📊  Trial Dipakai",  value = tostring(_state.trialUsed) .. "x",   inline = false },
-            { name = "⏳  Sisa Trial",     value = tostring(remaining) .. "x lagi",     inline = false },
-            { name = "🎮  Place ID",       value = "`" .. placeId .. "`",               inline = false },
-            { name = "🔗  Place Link",     value = placeLink,                           inline = false },
+            { name = "👤  User",       value = "`" .. playerName .. "`",                                                       inline = true  },
+            { name = "📊  Status",     value = statusText,                                                                     inline = true  },
+            { name = "🔢  Pemakaian",  value = "**" .. used .. "/" .. TRIAL_MAX .. "x**  |  Sisa: **" .. remaining .. "x**",   inline = false },
+            { name = "🛒  Beli Akses", value = "DM Owner: **" .. OWNER_NAME .. "** di Roblox",                                 inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                                                          inline = false },
+            { name = "🔗  Place Link", value = placeLink,                                                                      inline = false },
         },
-        footer    = { text = "Script Monitor • Trial" },
+        footer    = { text = "Script Monitor • Trial Mode" },
         timestamp = getTimestamp(),
     })
-    showNotif(
-        "🆓 Trial Mode",
-        "Trial ke-" .. _state.trialUsed .. "/" .. TRIAL_MAX .. " | Sisa: " .. remaining .. "x\nBeli akses: DM " .. OWNER_NAME,
-        7
-    )
-    warn("🆓 Trial " .. _state.trialUsed .. "/" .. TRIAL_MAX .. " | DM " .. OWNER_NAME .. " untuk beli akses penuh.")
 
-    -- Lanjut load script utama (jatah trial terpakai)
+    showNotif(notifTitle, notifText, notifDur)
+    warn("🆓 Trial " .. used .. "/" .. TRIAL_MAX .. " | Sisa: " .. remaining .. "x | DM " .. OWNER_NAME .. " untuk beli akses.")
+
     goto LOAD_SCRIPT
 end
 
@@ -276,10 +327,10 @@ if authData.type == "time" then
             description = "User terdaftar tapi **waktu akses sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",      value = "`" .. authKey .. "`", inline = true  },
-                { name = "🔴  Status",    value = "**EXPIRED**",          inline = true  },
-                { name = "🎮  Place ID",  value = "`" .. placeId .. "`",  inline = false },
-                { name = "🔗  Place Link",value = placeLink,              inline = false },
+                { name = "👤  User",       value = "`" .. authKey .. "`", inline = true  },
+                { name = "🔴  Status",     value = "**EXPIRED**",          inline = true  },
+                { name = "🎮  Place ID",   value = "`" .. placeId .. "`",  inline = false },
+                { name = "🔗  Place Link", value = placeLink,              inline = false },
             },
             footer    = { text = "Script Monitor • Time Expired" },
             timestamp = getTimestamp(),
@@ -292,8 +343,7 @@ if authData.type == "time" then
     -- Countdown timer in-memory
     local sessionStart = now
     task.spawn(function()
-        while true do
-            task.wait(1)
+        while task.wait(1) do
             local elapsed   = os.time() - sessionStart
             local newRemain = remaining - elapsed
             if newRemain <= 0 then
@@ -327,7 +377,7 @@ elseif authData.type == "limit" then
     local maxUsage = authData.value
     _state.usageCount = _state.usageCount + 1
     local used    = _state.usageCount
-    local leftStr = (maxUsage ~= -1) and tostring(maxUsage - used) or "INF"
+    local leftStr = (maxUsage == -1) and "∞" or tostring(maxUsage - used)
 
     if maxUsage ~= -1 and used > maxUsage then
         sendWebhook(WEBHOOK_UNAUTHORIZED, {
@@ -335,11 +385,11 @@ elseif authData.type == "limit" then
             description = "User terdaftar tapi **limit sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",     value = "`" .. authKey .. "`",                                      inline = true  },
-                { name = "🔴  Status",   value = "**INACTIVE** *(Limit Habis)*",                             inline = true  },
-                { name = "📊  Usage",    value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x",  inline = false },
-                { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                      inline = false },
-                { name = "🔗  Place",    value = placeLink,                                                  inline = false },
+                { name = "👤  User",     value = "`" .. authKey .. "`",                                     inline = true  },
+                { name = "🔴  Status",   value = "**INACTIVE — Limit Habis**",                              inline = true  },
+                { name = "📊  Usage",    value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x", inline = false },
+                { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                     inline = false },
+                { name = "🔗  Place",    value = placeLink,                                                 inline = false },
             },
             footer    = { text = "Script Monitor • Limit Reached" },
             timestamp = getTimestamp(),
@@ -354,27 +404,32 @@ elseif authData.type == "limit" then
         description = "User authorized berhasil menjalankan script.",
         color       = 3066993,
         fields      = {
-            { name = "👤  User",     value = "`" .. authKey .. "`",                                     inline = true  },
-            { name = "🟢  Status",   value = "**AUTHORIZED**",                                           inline = true  },
-            { name = "📊  Usage",    value = tostring(used) .. "x dipakai | **" .. leftStr .. "** sisa", inline = false },
-            { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                      inline = false },
-            { name = "🔗  Place",    value = placeLink,                                                  inline = false },
+            { name = "👤  User",     value = "`" .. authKey .. "`",                                           inline = true  },
+            { name = "🟢  Status",   value = "**AUTHORIZED**",                                                inline = true  },
+            { name = "📊  Usage",    value = tostring(used) .. "x dipakai | **" .. leftStr .. "x** tersisa",  inline = false },
+            { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                           inline = false },
+            { name = "🔗  Place",    value = placeLink,                                                       inline = false },
         },
         footer    = { text = "Script Monitor • Authorized" },
         timestamp = getTimestamp(),
     })
-    showNotif("✅ Script Loaded", "LIMIT " .. used .. "x / " .. (maxUsage == -1 and "∞" or tostring(maxUsage)), 5)
+    showNotif(
+        "✅ Script Loaded",
+        "Pemakaian: " .. used .. "x | Sisa: " .. leftStr .. "x",
+        5
+    )
 end
 
 -- ================================================
 --  LOAD SCRIPT UTAMA
 -- ================================================
 ::LOAD_SCRIPT::
+
 local success1, err1 = pcall(function()
     local url     = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
     local content = game:HttpGet(url, true)
     if not content or content == "" then
-        error("HttpGet return kosong / gagal fetch")
+        error("HttpGet return kosong")
     end
     local fn, loadErr = loadstring(content)
     if not fn then error("loadstring gagal: " .. tostring(loadErr)) end
