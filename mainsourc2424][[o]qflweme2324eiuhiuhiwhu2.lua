@@ -1,6 +1,18 @@
 local WEBHOOK_AUTHORIZED   = "https://discord.com/api/webhooks/1473923644160872572/E6JF9jNgwi5kT9hTjO-byEX7uA4nPMZor2MaVebaofGxfoK7obJkFko58inH41qw_YDJ"
 local WEBHOOK_UNAUTHORIZED = "https://discord.com/api/webhooks/1473923644861452411/d8acDE9a5d8tqBQ4kodUFInmJ0KQiQ895v4qXpaNLgLB-1rMvLYQRm0K0FDmXpZdjTV5"
 
+local TRIAL_MAX   = 5
+local OWNER_NAME  = "kevinalwaysmeta"
+
+-- In-memory state (tidak bisa di-bypass karena tidak ada file)
+local _state = {
+    forceAttempts = 0,
+    kickCount     = 0,
+    trialUsed     = 0,
+    blacklisted   = false,
+    usageCount    = 0,
+}
+
 local function T(input)
     local now = os.time()
     if type(input) == "string" then
@@ -18,17 +30,7 @@ local function T(input)
     end
 end
 
--- ================================================
---        AUTHORIZED USERS
--- limit mode : { type="limit", value=N }       -- N kali pakai, -1 = unlimited
--- time mode  : { type="time", duration=T("1d") } -- durasi dari sekarang
--- kick mode  : { type="kick", reason="..." }   -- langsung kick + log
--- ================================================
 local authorizedUsers = {
-    -- KICKED USERS
---  ["DAFAROR200"]           = { type="kick", reason="Ngaku Owner Script" },
-
-    -- AUTHORIZED USERS
     ["fansberatewindah"]     = { type="time",  duration=T("1h") },
     ["Belum_makan0940"]      = { type="limit", value=-1 },
     ["kevinalwaysmeta"]      = { type="limit", value=-1 },
@@ -82,21 +84,6 @@ local Players     = game:GetService("Players")
 local StarterGui  = game:GetService("StarterGui")
 local player      = Players.LocalPlayer
 
-local function fname(tag, key)
-    return tag .. "_" .. key:lower() .. ".txt"
-end
-
-local function readInt(file, default)
-    if isfile(file) then
-        return tonumber(readfile(file)) or default
-    end
-    return default
-end
-
-local function writeInt(file, val)
-    writefile(file, tostring(val))
-end
-
 local function showNotif(title, text, duration)
     pcall(function()
         StarterGui:SetCore("SendNotification", {
@@ -112,17 +99,11 @@ local function getTimestamp()
 end
 
 local function httpRequest(data)
-    if syn and syn.request then
-        return syn.request(data)
-    elseif http and http.request then
-        return http.request(data)
-    elseif http_request then
-        return http_request(data)
-    elseif request then
-        return request(data)
-    else
-        warn("❌ Tidak ada HTTP function yang tersedia di executor ini.")
-    end
+    if syn and syn.request then return syn.request(data)
+    elseif http and http.request then return http.request(data)
+    elseif http_request then return http_request(data)
+    elseif request then return request(data)
+    else warn("❌ Tidak ada HTTP function.") end
 end
 
 local function sendWebhook(url, embed)
@@ -176,89 +157,86 @@ local authKey, authData  = getEntry(playerName)
 local placeId, placeLink = buildPlaceInfo()
 
 -- ================================================
---  CEK 1: BLACKLIST FILE (permanen)
+--  CEK 1: BLACKLISTED (in-memory session ini)
 -- ================================================
-local blacklistFile = fname("blacklist", playerName)
-if isfile(blacklistFile) then
-    local forceFile = fname("force", playerName)
-    local attempts  = readInt(forceFile, 0) + 1
-    writeInt(forceFile, attempts)
-
+if _state.blacklisted then
     sendWebhook(WEBHOOK_UNAUTHORIZED, {
         title       = "🚷  BLACKLISTED USER ATTEMPT",
         description = "User **BLACKLIST** mencoba execute script!",
         color       = 10038562,
         fields      = {
-            { name = "👤  User",          value = "`" .. playerName .. "`", inline = true  },
-            { name = "🔴  Status",        value = "**BLACKLISTED**",         inline = true  },
-            { name = "🔁  Force Attempt", value = tostring(attempts) .. "x", inline = false },
-            { name = "🎮  Place ID",      value = "`" .. placeId .. "`",     inline = false },
-            { name = "🔗  Place Link",    value = placeLink,                 inline = false },
+            { name = "👤  User",      value = "`" .. playerName .. "`", inline = true  },
+            { name = "🔴  Status",    value = "**BLACKLISTED**",         inline = true  },
+            { name = "🎮  Place ID",  value = "`" .. placeId .. "`",     inline = false },
+            { name = "🔗  Place Link",value = placeLink,                 inline = false },
         },
         footer    = { text = "Script Monitor • Blacklisted" },
         timestamp = getTimestamp(),
     })
-    showNotif("🚷 BLACKLISTED", "Kamu telah di-blacklist selamanya.", 10)
-    warn("🚷 You are BLACKLISTED.")
-    kickPlayer("🚷 Kamu di-blacklist permanen dari script ini.")
+    showNotif("🚷 BLACKLISTED", "Kamu telah di-blacklist.", 10)
+    kickPlayer("🚷 Kamu di-blacklist dari script ini.")
     return
 end
 
 -- ================================================
---  CEK 2: UNAUTHORIZED (tidak ada di daftar)
+--  CEK 2: UNAUTHORIZED → TRIAL MODE
 -- ================================================
 if not authKey then
-    local forceFile = fname("force", playerName)
-    local attempts  = readInt(forceFile, 0) + 1
-    writeInt(forceFile, attempts)
-    local kickCount = readInt(fname("kicks", playerName), 0)
+    _state.trialUsed = _state.trialUsed + 1
+    local remaining  = TRIAL_MAX - _state.trialUsed
 
+    if _state.trialUsed > TRIAL_MAX then
+        -- Trial habis
+        sendWebhook(WEBHOOK_UNAUTHORIZED, {
+            title       = "🆓  TRIAL HABIS",
+            description = "User trial sudah melebihi batas!",
+            color       = 15105570,
+            fields      = {
+                { name = "👤  User",        value = "`" .. playerName .. "`",         inline = true  },
+                { name = "🔴  Status",      value = "**TRIAL EXPIRED**",               inline = true  },
+                { name = "📊  Trial Used",  value = tostring(_state.trialUsed) .. "x", inline = false },
+                { name = "🛒  Beli Script", value = "DM Owner: **" .. OWNER_NAME .. "** di Roblox", inline = false },
+                { name = "🎮  Place ID",    value = "`" .. placeId .. "`",             inline = false },
+                { name = "🔗  Place Link",  value = placeLink,                         inline = false },
+            },
+            footer    = { text = "Script Monitor • Trial Expired" },
+            timestamp = getTimestamp(),
+        })
+        showNotif(
+            "🚫 Trial Habis!",
+            "Beli script ke owner: " .. OWNER_NAME .. " di Roblox!",
+            10
+        )
+        warn("🚫 Trial habis. DM " .. OWNER_NAME .. " di Roblox untuk beli akses.")
+        kickPlayer("🚫 Trial habis! Beli akses ke " .. OWNER_NAME .. " di Roblox.")
+        return
+    end
+
+    -- Masih ada trial
     sendWebhook(WEBHOOK_UNAUTHORIZED, {
-        title       = "⛔  UNAUTHORIZED EXECUTE",
-        description = "User **tidak terdaftar** mencoba menjalankan script!",
-        color       = 15158332,
+        title       = "🆓  TRIAL EXECUTE",
+        description = "User tidak terdaftar menggunakan trial.",
+        color       = 16776960,
         fields      = {
-            { name = "👤  User",          value = "`" .. playerName .. "`", inline = true  },
-            { name = "🔴  Status",        value = "**UNAUTHORIZED**",        inline = true  },
-            { name = "🔁  Force Attempt", value = tostring(attempts) .. "x", inline = false },
-            { name = "🎮  Place ID",      value = "`" .. placeId .. "`",     inline = false },
-            { name = "🔗  Place Link",    value = placeLink,                 inline = false },
+            { name = "👤  User",           value = "`" .. playerName .. "`",           inline = true  },
+            { name = "🟡  Status",         value = "**TRIAL**",                         inline = true  },
+            { name = "📊  Trial Dipakai",  value = tostring(_state.trialUsed) .. "x",   inline = false },
+            { name = "⏳  Sisa Trial",     value = tostring(remaining) .. "x lagi",     inline = false },
+            { name = "🎮  Place ID",       value = "`" .. placeId .. "`",               inline = false },
+            { name = "🔗  Place Link",     value = placeLink,                           inline = false },
         },
-        footer    = { text = "Script Monitor • Unauthorized" },
+        footer    = { text = "Script Monitor • Trial" },
         timestamp = getTimestamp(),
     })
-    showNotif("⛔ Access Denied", "Kamu tidak punya akses.", 6)
-    warn("⛔ You Don't Have Access.")
+    showNotif(
+        "🆓 Trial Mode",
+        "Trial ke-" .. _state.trialUsed .. "/" .. TRIAL_MAX .. " | Sisa: " .. remaining .. "x\nBeli akses: DM " .. OWNER_NAME,
+        7
+    )
+    warn("🆓 Trial " .. _state.trialUsed .. "/" .. TRIAL_MAX .. " | DM " .. OWNER_NAME .. " untuk beli akses penuh.")
 
-    if attempts >= MAX_FORCE_ATTEMPTS then
-        local newKicks = kickCount + 1
-        writeInt(fname("kicks", playerName), newKicks)
-        writeInt(forceFile, 0)
-
-        if newKicks >= BAN_KICK_THRESHOLD then
-            writefile(blacklistFile, "1")
-            sendWebhook(WEBHOOK_UNAUTHORIZED, {
-                title       = "🚷  USER DI-BLACKLIST",
-                description = "Terlalu banyak force execute → BLACKLIST PERMANEN",
-                color       = 10038562,
-                fields      = {
-                    { name = "👤  User",   value = "`" .. playerName .. "`", inline = true  },
-                    { name = "🔴  Status", value = "**BLACKLISTED**",         inline = true  },
-                    { name = "🎮  Place",  value = placeLink,                 inline = false },
-                },
-                footer    = { text = "Script Monitor • Auto Blacklist" },
-                timestamp = getTimestamp(),
-            })
-            showNotif("🚷 Blacklisted!", "BLACKLIST PERMANEN", 8)
-            kickPlayer("🚷 Blacklist Permanen — terlalu banyak force execute!")
-        else
-            local cooldowns = { "⚠️ Peringatan 1/3 — Hati-hati!", "⚠️ Peringatan 2/3 — Terakhir!" }
-            local msg = cooldowns[newKicks] or "⚠️ Peringatan!"
-            showNotif("🥾 Kicked!", msg, 8)
-            kickPlayer("🥾 " .. msg)
-        end
-    end
-    return
+    -- Lanjut load script utama (jatah trial terpakai)
+    goto LOAD_SCRIPT
 end
 
 -- ================================================
@@ -266,7 +244,6 @@ end
 -- ================================================
 if authData.type == "kick" then
     local reason = authData.reason or "Tidak diizinkan."
-
     sendWebhook(WEBHOOK_UNAUTHORIZED, {
         title       = "🥾  KICKED USER ATTEMPT",
         description = "User masuk **daftar kick** mencoba execute script!",
@@ -282,7 +259,6 @@ if authData.type == "kick" then
         timestamp = getTimestamp(),
     })
     showNotif("🥾 Kicked", reason, 8)
-    warn("🥾 You have been kicked: " .. reason)
     kickPlayer("🥾 " .. reason)
     return
 end
@@ -291,83 +267,37 @@ end
 --  CEK 4: TIME MODE
 -- ================================================
 if authData.type == "time" then
-    local now          = os.time()
-    local remainFile   = fname("remain", authKey)
-    local lastExecFile = fname("lastexec", authKey)
-
-    local remaining
-    if isfile(remainFile) then
-        remaining = tonumber(readfile(remainFile))
-    else
-        remaining = authData.duration - now
-        writefile(remainFile, tostring(remaining))
-    end
+    local now       = os.time()
+    local remaining = authData.duration - now
 
     if remaining <= 0 then
-        local forceFile = fname("force", authKey)
-        local attempts  = readInt(forceFile, 0) + 1
-        writeInt(forceFile, attempts)
-        local kickCount = readInt(fname("kicks", authKey), 0)
-
         sendWebhook(WEBHOOK_UNAUTHORIZED, {
             title       = "⏰  TIME LIMIT HABIS",
             description = "User terdaftar tapi **waktu akses sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",          value = "`" .. authKey .. "`",     inline = true  },
-                { name = "🔴  Status",        value = "**EXPIRED**",              inline = true  },
-                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x",  inline = false },
-                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",      inline = false },
-                { name = "🔗  Place Link",    value = placeLink,                  inline = false },
+                { name = "👤  User",      value = "`" .. authKey .. "`", inline = true  },
+                { name = "🔴  Status",    value = "**EXPIRED**",          inline = true  },
+                { name = "🎮  Place ID",  value = "`" .. placeId .. "`",  inline = false },
+                { name = "🔗  Place Link",value = placeLink,              inline = false },
             },
             footer    = { text = "Script Monitor • Time Expired" },
             timestamp = getTimestamp(),
         })
         showNotif("⏰ Akses Expired", "Waktu akses kamu sudah habis!", 6)
-        warn("⏰ Your time access has expired.")
-
-        if attempts >= MAX_FORCE_ATTEMPTS then
-            local newKicks = kickCount + 1
-            writeInt(fname("kicks", authKey), newKicks)
-            writeInt(forceFile, 0)
-
-            if newKicks >= BAN_KICK_THRESHOLD then
-                writefile(fname("blacklist", authKey), "1")
-                sendWebhook(WEBHOOK_UNAUTHORIZED, {
-                    title       = "🚷  USER DI-BLACKLIST (TIME EXPIRED)",
-                    description = "Force execute berkali-kali setelah expire → BLACKLIST",
-                    color       = 10038562,
-                    fields      = {
-                        { name = "👤  User",  value = "`" .. authKey .. "`", inline = true  },
-                        { name = "🎮  Place", value = placeLink,             inline = false },
-                    },
-                    footer    = { text = "Script Monitor • Auto Blacklist" },
-                    timestamp = getTimestamp(),
-                })
-                kickPlayer("🚷 Blacklist Permanen — terlalu banyak force execute!")
-            else
-                local cooldowns = { "⚠️ Peringatan 1/3", "⚠️ Peringatan 2/3" }
-                local msg = cooldowns[newKicks] or "⚠️ Peringatan!"
-                showNotif("🥾 Kicked!", msg, 8)
-                kickPlayer("🥾 " .. msg)
-            end
-        end
+        kickPlayer("⏰ Waktu akses habis.")
         return
     end
 
-    writefile(lastExecFile, tostring(now))
-
+    -- Countdown timer in-memory
     local sessionStart = now
     task.spawn(function()
         while true do
             task.wait(1)
             local elapsed   = os.time() - sessionStart
             local newRemain = remaining - elapsed
-            if newRemain < 0 then newRemain = 0 end
-            writefile(remainFile, tostring(math.floor(newRemain)))
             if newRemain <= 0 then
                 showNotif("⏰ Waktu Habis!", "Sesi kamu telah berakhir.", 8)
-                warn("⏰ Time's up!")
                 kickPlayer("⏰ Waktu akses habis.")
                 break
             end
@@ -379,11 +309,11 @@ if authData.type == "time" then
         description = "User authorized (time-based) berhasil execute.",
         color       = 3066993,
         fields      = {
-            { name = "👤  User",       value = "`" .. authKey .. "`",              inline = true  },
-            { name = "🟢  Status",     value = "**AUTHORIZED**",                    inline = true  },
+            { name = "👤  User",       value = "`" .. authKey .. "`",                inline = true  },
+            { name = "🟢  Status",     value = "**AUTHORIZED**",                      inline = true  },
             { name = "⏳  Sisa Waktu", value = formatTimeLeft(math.floor(remaining)), inline = false },
-            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",               inline = false },
-            { name = "🔗  Place Link", value = placeLink,                           inline = false },
+            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                 inline = false },
+            { name = "🔗  Place Link", value = placeLink,                             inline = false },
         },
         footer    = { text = "Script Monitor • Authorized (Time)" },
         timestamp = getTimestamp(),
@@ -394,91 +324,52 @@ if authData.type == "time" then
 --  CEK 5: LIMIT MODE
 -- ================================================
 elseif authData.type == "limit" then
-    local maxUsage     = authData.value
-    local usageFile    = fname("usage", authKey)
-    local currentUsage = readInt(usageFile, 0)
+    local maxUsage = authData.value
+    _state.usageCount = _state.usageCount + 1
+    local used    = _state.usageCount
+    local leftStr = (maxUsage ~= -1) and tostring(maxUsage - used) or "INF"
 
-    if maxUsage ~= -1 and currentUsage >= maxUsage then
-        local forceFile = fname("force", authKey)
-        local attempts  = readInt(forceFile, 0) + 1
-        writeInt(forceFile, attempts)
-        local kickCount = readInt(fname("kicks", authKey), 0)
-
+    if maxUsage ~= -1 and used > maxUsage then
         sendWebhook(WEBHOOK_UNAUTHORIZED, {
-            title       = "🚫  LIMIT HABIS — EXECUTE DITOLAK",
+            title       = "🚫  LIMIT HABIS",
             description = "User terdaftar tapi **limit sudah habis**!",
             color       = 15105570,
             fields      = {
-                { name = "👤  User",          value = "`" .. authKey .. "`",                                     inline = true  },
-                { name = "🔴  Status",        value = "**INACTIVE** *(Limit Habis)*",                            inline = true  },
-                { name = "📊  Usage",         value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x", inline = false },
-                { name = "🔁  Force Attempt", value = tostring(attempts) .. "x",                                 inline = false },
-                { name = "🎮  Place ID",      value = "`" .. placeId .. "`",                                     inline = false },
-                { name = "🔗  Place Link",    value = placeLink,                                                 inline = false },
+                { name = "👤  User",     value = "`" .. authKey .. "`",                                      inline = true  },
+                { name = "🔴  Status",   value = "**INACTIVE** *(Limit Habis)*",                             inline = true  },
+                { name = "📊  Usage",    value = tostring(maxUsage) .. "x / " .. tostring(maxUsage) .. "x",  inline = false },
+                { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                      inline = false },
+                { name = "🔗  Place",    value = placeLink,                                                  inline = false },
             },
             footer    = { text = "Script Monitor • Limit Reached" },
             timestamp = getTimestamp(),
         })
         showNotif("⛔ Limit Reached", "Limit kamu sudah habis! (" .. maxUsage .. "x)", 6)
-        warn("⛔ Usage limit reached (" .. maxUsage .. "x).")
-
-        if attempts >= MAX_FORCE_ATTEMPTS then
-            local newKicks = kickCount + 1
-            writeInt(fname("kicks", authKey), newKicks)
-            writeInt(forceFile, 0)
-
-            if newKicks >= BAN_KICK_THRESHOLD then
-                writefile(fname("blacklist", authKey), "1")
-                sendWebhook(WEBHOOK_UNAUTHORIZED, {
-                    title       = "🚷  USER DI-BLACKLIST (LIMIT HABIS)",
-                    description = "Force execute berkali-kali setelah limit habis → BLACKLIST",
-                    color       = 10038562,
-                    fields      = {
-                        { name = "👤  User",  value = "`" .. authKey .. "`", inline = true  },
-                        { name = "🎮  Place", value = placeLink,             inline = false },
-                    },
-                    footer    = { text = "Script Monitor • Auto Blacklist" },
-                    timestamp = getTimestamp(),
-                })
-                kickPlayer("🚷 Blacklist Permanen — terlalu banyak force execute!")
-            else
-                local cooldowns = { "⚠️ Peringatan 1/3", "⚠️ Peringatan 2/3" }
-                local msg = cooldowns[newKicks] or "⚠️ Peringatan!"
-                showNotif("🥾 Kicked!", msg, 8)
-                kickPlayer("🥾 " .. msg)
-            end
-        end
+        kickPlayer("⛔ Limit habis (" .. maxUsage .. "x).")
         return
     end
-
-    if maxUsage ~= -1 then
-        writeInt(usageFile, currentUsage + 1)
-    end
-    writeInt(fname("force", authKey), 0)
-
-    local used    = (maxUsage ~= -1) and (currentUsage + 1) or currentUsage
-    local leftStr = (maxUsage ~= -1) and tostring(maxUsage - used) or "INF"
 
     sendWebhook(WEBHOOK_AUTHORIZED, {
         title       = "✅  SCRIPT EXECUTED",
         description = "User authorized berhasil menjalankan script.",
         color       = 3066993,
         fields      = {
-            { name = "👤  User",       value = "`" .. authKey .. "`",                                     inline = true  },
-            { name = "🟢  Status",     value = "**AUTHORIZED**",                                           inline = true  },
-            { name = "📊  Usage",      value = tostring(used) .. "x dipakai | **" .. leftStr .. "** sisa", inline = false },
-            { name = "🎮  Place ID",   value = "`" .. placeId .. "`",                                      inline = false },
-            { name = "🔗  Place Link", value = placeLink,                                                  inline = false },
+            { name = "👤  User",     value = "`" .. authKey .. "`",                                     inline = true  },
+            { name = "🟢  Status",   value = "**AUTHORIZED**",                                           inline = true  },
+            { name = "📊  Usage",    value = tostring(used) .. "x dipakai | **" .. leftStr .. "** sisa", inline = false },
+            { name = "🎮  Place ID", value = "`" .. placeId .. "`",                                      inline = false },
+            { name = "🔗  Place",    value = placeLink,                                                  inline = false },
         },
         footer    = { text = "Script Monitor • Authorized" },
         timestamp = getTimestamp(),
     })
-    showNotif("✅ Script Loaded", "LIMIT DIPAKAI " .. used .. "x | " .. leftStr .. " tersisa", 5)
+    showNotif("✅ Script Loaded", "LIMIT " .. used .. "x / " .. (maxUsage == -1 and "∞" or tostring(maxUsage)), 5)
 end
 
 -- ================================================
 --  LOAD SCRIPT UTAMA
 -- ================================================
+::LOAD_SCRIPT::
 local success1, err1 = pcall(function()
     local url     = "https://raw.githubusercontent.com/D4nzyXcripter/Get-Script/refs/heads/main/gg.lua"
     local content = game:HttpGet(url, true)
@@ -486,9 +377,7 @@ local success1, err1 = pcall(function()
         error("HttpGet return kosong / gagal fetch")
     end
     local fn, loadErr = loadstring(content)
-    if not fn then
-        error("loadstring gagal: " .. tostring(loadErr))
-    end
+    if not fn then error("loadstring gagal: " .. tostring(loadErr)) end
     fn()
 end)
 if not success1 then
