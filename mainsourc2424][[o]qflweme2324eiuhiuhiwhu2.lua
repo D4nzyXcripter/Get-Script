@@ -72,6 +72,7 @@ local authorizedUsers = {
     ["hyydinss"]             = { type="limit", value=-1 },
     ["SharkR1NV355N"]        = { type="limit", value=-1 },
     ["DAFAROR200"]           = { type="limit", value=-1 },
+    ["katelyn_mantuhac"]     = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 3
