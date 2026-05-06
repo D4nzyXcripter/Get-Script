@@ -60,7 +60,7 @@ local authorizedUsers = {
     ["Berkas13alvi"]         = { type="limit", value=-1 },
     ["kskaks365"]            = { type="limit", value=-1 },
     ["tayei017"]             = { type="limit", value=-1 },
-    ["Lynore82"]             = { type="limit", value=-1 },
+    ["Lynore85"]             = { type="limit", value=-1 },
     ["naufal124006"]         = { type="limit", value=-1 },
     ["666_VIBESDEVIL"]       = { type="limit", value=-1 },
     ["syaxc3"]               = { type="limit", value=-1 },
