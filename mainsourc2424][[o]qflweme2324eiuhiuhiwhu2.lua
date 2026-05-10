@@ -30,6 +30,7 @@ local authorizedUsers = {
 
     -- AUTHORIZED USERS
     ["fansberatewindah"]     = { type="time",  duration=T("1h") },
+    ["alip_0404"]            = { type="limit", value=-1 },
     ["Belum_makan0940"]      = { type="limit", value=-1 },
     ["kevinalwaysmeta"]      = { type="limit", value=-1 },
     ["StarBoyTulus"]         = { type="limit", value=-1 },
