@@ -79,6 +79,7 @@ local authorizedUsers = {
     ["Milanpiran005"]        = { type="limit", value=-1 },
     ["robloxsrious2"]        = { type="limit", value=-1 },
     ["zxcopnaso"]            = { type="limit", value=-1 },
+    ["Ry575ytgh5"]           = { type="limit", value=-1 },
 }
 
 local MAX_FORCE_ATTEMPTS = 3
