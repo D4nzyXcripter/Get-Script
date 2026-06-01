@@ -39,7 +39,7 @@ local authorizedUsers = {
     ["dontol5012"]           = { type="limit", value=-1 },
     ["sukinoo7"]             = { type="limit", value=-1 },
     ["Beno12_44agung"]       = { type="limit", value=-1 },
-    ["rlueeeeg7"]            = { type="limit", value=-1 },
+    ["KS_BOSS11"]            = { type="limit", value=-1 },
     ["izurinrob4"]           = { type="limit", value=-1 },
     ["arididuri"]            = { type="limit", value=-1 },
     ["tanzilkece"]           = { type="limit", value=-1 },
